@@ -147,7 +147,7 @@ export default function VideoPage(props){
         <Box className="videoPage-container">
             <div className="videoWrapper">
                 <iframe 
-                    src={`http://www.${video.videoLink}`}
+                    src={`https://www.${video.videoLink}`}
                     allow="accelerometer; autoplay ;clipboard-write; encrypted-media, gyroscpoe, picture-in-picture "
                     allowFullScreen
                 />
