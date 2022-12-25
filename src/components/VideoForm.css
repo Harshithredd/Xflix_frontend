@@ -1,0 +1,7 @@
+.formWrapper{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: whitesmoke;
+}
+

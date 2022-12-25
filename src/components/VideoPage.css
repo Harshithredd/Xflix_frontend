@@ -1,0 +1,32 @@
+.videoPage-container{
+    margin: 0.5rem;
+}
+.videoWrapper {
+	position: relative;
+	padding-bottom: 42.25%; /* 16:9 */
+	padding-top: 25px;
+	height: 0;
+}
+.videoWrapper iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+.videoText{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+}
+.horizontalLine{
+    height: 0.01rem;
+    background-color:grey ;
+    margin: 2rem 0rem;
+}
+@media screen and (min-width :768px) {
+    .videoPage-container{
+        margin: 1rem 5rem;
+    }
+}

@@ -1,0 +1,37 @@
+
+.search-desktop{
+    display: none !important;
+    
+    
+}
+.search-mobile{
+    display: block !important;
+    width: 100% !important;
+}
+.circular-progress{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.circular-progress-parent{
+    height: 30rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #181818;
+}
+.no-products{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 30rem;
+    background-color: #181818;
+  }
+@media screen and (min-width : 768px) {
+    .search-mobile{
+        display: none !important;
+    }
+    .search-desktop{
+        display: block !important;
+    }
+}

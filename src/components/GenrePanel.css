@@ -1,0 +1,32 @@
+.chips-contaier-genre{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color:#414040 ;
+    flex-wrap: wrap;
+}
+.chips{
+    padding: 0.5rem;
+    /* background-color: #1818185c; */
+    color: whitesmoke;
+    margin: 1rem;
+    cursor: pointer;
+}
+.chips-active{
+    background-color: whitesmoke;
+    color: rgb(99, 99, 99);
+    border-radius: 20px;
+
+}
+.sort-by{
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    background-color: whitesmoke;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+select{
+    text-decoration: none;
+    border: none;
+}
