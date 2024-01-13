@@ -26,7 +26,6 @@
     padding: 0.5rem;
     cursor: pointer;
 }
-select{
-    text-decoration: none;
-    border: none;
+.selectLabel{
+    color: whitesmoke;
 }

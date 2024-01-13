@@ -1,9 +1,22 @@
 import {FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import "./GenrePanel.css"
 import React from "react";
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles({
+    label: {
+      color: 'whitesmoke !important', // Change color to whitesmoke
+    //   '&.Mui-focused': {
+    //     color: 'green', // Change color to green when focused
+    //   },
+    },
+   });
+
 export default function GenerePanel(props){
     let genreArray =["Education", "Sports", "Movies", "Comedy", "Lifestyle"];
     let contentRatingArray =["Anyone", "7+", "12+", "16+", "18+"]
+
+    let classes = useStyles();
     return(
         <div>
             <div className= "chips-contaier-genre">
@@ -17,14 +30,14 @@ export default function GenerePanel(props){
                     )
                 })}
                 <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-                    <InputLabel id="demo-simple-select-filled-label">Sort By</InputLabel>
+                    <InputLabel  className={classes.label}  id="demo-simple-select-filled-label">Sort By</InputLabel>
                     <Select
-                        sx={{color:"white"}}
                         labelId="demo-simple-select-filled-label"
                         id="demo-simple-select-filled"
                         value={props.sortBy}
                         onChange={props.handleSort}
                         label="Sort By"
+                        className={classes.label} 
                         
                     >
                         <MenuItem value="releaseDate">Release Date</MenuItem>
