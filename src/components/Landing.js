@@ -11,12 +11,12 @@ import {
 import { Search, SentimentDissatisfied } from "@mui/icons-material";
 import GenerePanel from "./GenrePanel";
 import VideoCard from "./VideoCard";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { config } from "../App";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import { useHistory } from "react-router-dom";
 import DialogButton from "./DialogButton";
+import { MONTH_NAMES } from "../utils/constants";
 
 export default function Landing() {
   const { enqueueSnackbar } = useSnackbar();
@@ -30,21 +30,16 @@ export default function Landing() {
   const [noVideoFound, setNoVideoFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  let history = useHistory();
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const [Timmer, setTimmer] = useState(null);
+
+  const debounceSearch = (event, debounceTimeout) => {
+    clearTimeout(Timmer);
+    const newTimeOut = setTimeout(() => {
+      const newValue = event.target.value;
+      setFilterData({ ...filterData, searchText: newValue });
+    }, debounceTimeout);
+    setTimmer(newTimeOut); 
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -70,10 +65,8 @@ export default function Landing() {
       setFilterData({ ...filterData, genre: [] });
       return;
     }
-    console.log(filterData.genre);
     if (!filterData.genre.includes(val)) {
       setFilterData({ ...filterData, genre: [...filterData.genre, val] });
-      return;
     } else {
       setFilterData({
         ...filterData,
@@ -132,12 +125,12 @@ export default function Landing() {
       const res = await axios.get(url);
       setIsLoading(false);
       setNoVideoFound(false);
-      // console.log(res);
       const filteredVideosList = getVideosBySort(sortBy,res?.data?.videos);
       setVideosList(filteredVideosList);
+
     } catch (e) {
       setIsLoading(false);
-      console.log(e);
+      console.error(e);
       setNoVideoFound(true);
       if (e.response) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
@@ -159,7 +152,7 @@ export default function Landing() {
       formData;
     let d = new Date(releaseDate);
     let dateString = `${d.getDate()} ${
-      monthNames[d.getMonth()]
+      MONTH_NAMES[d.getMonth()]
     } ${d.getFullYear()}`;
     let data = {
       videoLink: videoLink,
@@ -169,7 +162,7 @@ export default function Landing() {
       releaseDate: dateString,
       previewImage: imageLink,
     };
-    console.log(data);
+
     try {
       let url = `${config.endpoint}/videos`;
       await axios.post(url, data);
@@ -177,7 +170,7 @@ export default function Landing() {
       enqueueSnackbar("Video Uploaded Successfully", { variant: "success" });
       getVideosByFilteredData(sortBy, filterData);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       if (e.response) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
       } else {
@@ -208,9 +201,6 @@ export default function Landing() {
     return true;
   };
 
-  // useEffect(() => {
-  //   getVideosBySort();
-  // }, [sortBy,getVideosBySort]);
   useEffect(() => {
     getVideosByFilteredData(sortBy,filterData);
   }, [filterData,getVideosByFilteredData,sortBy]);
@@ -237,8 +227,7 @@ export default function Landing() {
           placeholder="Search"
           variant="outlined"
           size="small"
-          onChange={handelSearch}
-          value={filterData.searchText}
+          onChange={(e)=>{debounceSearch(e,500)}}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
