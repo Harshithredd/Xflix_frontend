@@ -1,0 +1,57 @@
+.image{
+    width: inherit;
+    height: 10rem;
+}
+
+.shimmerBg{
+    animation-duration: 2.2s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: shimmer;
+    animation-timing-function: linear;
+    background:  rgb(59, 59, 59);
+    background: linear-gradient(to right, rgb(59, 59, 59)  8%, rgb(65, 64, 64) 18%, rgb(59, 59, 59) 33%);
+    background-size: 1200px 100%;
+}
+
+.bodyContainer{
+    width: inherit;
+    display: flex;
+    flex-direction: column;
+}
+
+.title{
+    margin-top: 1rem;
+    margin-left: 1rem;
+    width: 15rem;
+    height: 2rem;
+    background-color: rgb(59, 59, 59);
+    border-radius: 8px;
+}
+
+.subTitle{
+    margin-top: 1rem;
+    margin-left: 1rem;
+    width: 10rem;
+    height: 1rem;
+    border-radius: 8px;
+    background-color: rgb(48, 48, 48);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1200px 0;
+    }
+    100% {
+        background-position: 1200px 0;
+    }
+}
+
+@-webkit-keyframes shimmer {
+    0% {
+        background-position: -100% 0;
+    }
+    100% {
+        background-position: 100% 0;
+    }
+}

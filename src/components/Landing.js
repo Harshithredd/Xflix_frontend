@@ -10,13 +10,16 @@ import {
 } from "@mui/material";
 import { Search, SentimentDissatisfied } from "@mui/icons-material";
 import GenerePanel from "./GenrePanel";
-import VideoCard from "./VideoCard";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { config } from "../App";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import DialogButton from "./DialogButton";
 import { MONTH_NAMES } from "../utils/constants";
+import useDebonce from "../hooks/useDebonce";
+import VideoList from "./VideoList";
+import { validateData } from "../utils/ValidateForm";
+import ShimmerUICards from "./ShimmerUICards/ShimmerUICards";
 
 export default function Landing() {
   const { enqueueSnackbar } = useSnackbar();
@@ -30,16 +33,14 @@ export default function Landing() {
   const [noVideoFound, setNoVideoFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [Timmer, setTimmer] = useState(null);
+  const [debounce] = useDebonce();
 
-  const debounceSearch = (event, debounceTimeout) => {
-    clearTimeout(Timmer);
-    const newTimeOut = setTimeout(() => {
-      const newValue = event.target.value;
-      setFilterData({ ...filterData, searchText: newValue });
-    }, debounceTimeout);
-    setTimmer(newTimeOut); 
+  const setSearchData = (event) => {
+    const newValue = event.target.value;
+    setFilterData({ ...filterData, searchText: newValue });
   };
+
+  const debounceSearch = debounce(setSearchData, 500);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -48,9 +49,6 @@ export default function Landing() {
     setOpen(false);
   };
 
-  const handelSearch = (e) => {
-    setFilterData({ ...filterData, searchText: e.target.value });
-  };
   const handelAgeRating = (e) => {
     let val = e.target.dataset.value;
     if (val === "Any Age Group") {
@@ -59,6 +57,7 @@ export default function Landing() {
       setFilterData({ ...filterData, ageRating: val });
     }
   };
+
   const handelGenre = (e) => {
     let val = e.target.dataset.value;
     if (val === "All Genre") {
@@ -77,7 +76,7 @@ export default function Landing() {
     }
   };
 
-  const getVideosBySort = useCallback((sortBy,unsortedList) => {
+  const getVideosBySort = useCallback((sortBy, unsortedList) => {
     let sortedList = [...unsortedList];
     if (sortBy === "releaseDate") {
       sortedList.sort(
@@ -86,68 +85,88 @@ export default function Landing() {
     } else if (sortBy === "viewCount") {
       sortedList.sort((a, b) => b.viewCount - a.viewCount);
     }
-   return sortedList;
-  },[]);
+    return sortedList;
+  }, []);
 
   const handleSort = (event) => {
     setSortBy(event.target.value);
-    const sortedList = getVideosBySort(event.target.value,videosList);
+    const sortedList = getVideosBySort(event.target.value, videosList);
     setVideosList(sortedList);
   };
 
-  const getVideosByFilteredData = useCallback(async (sortBy,filteredData) => {
-    try {
-      let url = `${config.endpoint}/videos?`;
-      if (filteredData.searchText !== "") {
-        url += `title=${filteredData.searchText}`;
-      }
-      if (filteredData.genre.length > 0) {
-        let genres = filteredData.genre;
-        let genreString = "genres=";
-        for (let i = 0; i < genres.length - 1; i++) {
-          genreString += `${genres[i]},`;
-        }
-        genreString += genres[genres.length - 1];
-        if (filteredData.searchText !== "") {
-          url += `&${genreString}`;
-        } else {
-          url += genreString;
-        }
-      }
-      if (filteredData.ageRating !== "") {
-        if (filteredData.searchText !== "" || filteredData.genre.length > 0) {
-          url += `&contentRating=${filteredData.ageRating}`;
-        } else {
-          url += `contentRating=${filteredData.ageRating}`;
-        }
-      }
-      setIsLoading(true);
-      const res = await axios.get(url);
-      setIsLoading(false);
-      setNoVideoFound(false);
-      const filteredVideosList = getVideosBySort(sortBy,res?.data?.videos);
-      setVideosList(filteredVideosList);
-
-    } catch (e) {
-      setIsLoading(false);
-      console.error(e);
-      setNoVideoFound(true);
-      if (e.response) {
-        enqueueSnackbar(e.response.data.message, { variant: "error" });
+  function addAgeRatingDataToUrl(filteredData, url) {
+    if (filteredData.ageRating !== "") {
+      if (filteredData.searchText !== "" || filteredData.genre.length > 0) {
+        url += `&contentRating=${filteredData.ageRating}`;
       } else {
-        enqueueSnackbar(
-          " Check that the backend is running, reachable and returns valid JSON.",
-          {
-            variant: "error",
-          }
-        );
+        url += `contentRating=${filteredData.ageRating}`;
       }
-      return null;
     }
-  },[enqueueSnackbar,getVideosBySort]);
+    return url;
+  }
+
+  function addGenreDataToUrl(filteredData, url) {
+    if (filteredData.genre.length > 0) {
+      let genres = filteredData.genre;
+      let genreString = "genres=";
+      for (let i = 0; i < genres.length - 1; i++) {
+        genreString += `${genres[i]},`;
+      }
+      genreString += genres[genres.length - 1];
+      if (filteredData.searchText !== "") {
+        url += `&${genreString}`;
+      } else {
+        url += genreString;
+      }
+    }
+    return url;
+  }
+
+  function addSearchDataToUrl(filteredData, url) {
+    if (filteredData.searchText !== "") {
+      url += `title=${filteredData.searchText}`;
+    }
+    return url;
+  }
+
+  const getVideosByFilteredData = useCallback(
+    async (sortBy, filteredData) => {
+      try {
+        let url = `${config.endpoint}/videos?`;
+        url = addSearchDataToUrl(filteredData, url);
+        url = addGenreDataToUrl(filteredData, url);
+        url = addAgeRatingDataToUrl(filteredData, url);
+        setIsLoading(true);
+        const res = await axios.get(url);
+        setIsLoading(false);
+        setNoVideoFound(false);
+        const filteredVideosList = getVideosBySort(sortBy, res?.data?.videos);
+        setVideosList(filteredVideosList);
+      } catch (e) {
+        setIsLoading(false);
+        console.error(e);
+        setNoVideoFound(true);
+        if (e.response) {
+          enqueueSnackbar(e.response.data.message, { variant: "error" });
+        } else {
+          enqueueSnackbar(
+            " Check that the backend is running, reachable and returns valid JSON.",
+            {
+              variant: "error",
+            }
+          );
+        }
+        return null;
+      }
+    },
+    [enqueueSnackbar, getVideosBySort]
+  );
 
   const postVideoUpload = async (formData) => {
-    if (!validateData(formData)) return;
+    if (!validateData(formData)) {
+      enqueueSnackbar("fields cannot be empty", { variant: "Warning" });
+      return;
+    }
     const { videoLink, imageLink, title, genre, contentRating, releaseDate } =
       formData;
     let d = new Date(releaseDate);
@@ -184,26 +203,22 @@ export default function Landing() {
       return null;
     }
   };
-  const validateData = (formData) => {
-    const { videoLink, imageLink, title, genre, contentRating, releaseDate } =
-      formData;
-    if (
-      videoLink === "" ||
-      imageLink === "" ||
-      title === "" ||
-      genre === "" ||
-      contentRating === "" ||
-      releaseDate === ""
-    ) {
-      enqueueSnackbar("fields cannot be empty", { variant: "Warning" });
-      return false;
-    }
-    return true;
-  };
 
   useEffect(() => {
-    getVideosByFilteredData(sortBy,filterData);
-  }, [filterData,getVideosByFilteredData,sortBy]);
+    getVideosByFilteredData(sortBy, filterData);
+  }, [filterData, getVideosByFilteredData, sortBy]);
+
+  const NoVideoFoundComponent = (
+    <Box className="no-products">
+      <SentimentDissatisfied />
+      <div>
+        <Typography variant="h6" sx={{ color: "#F3F4F8" }}>
+          No Videos Found
+        </Typography>
+      </div>
+    </Box>
+  );
+
   return (
     <>
       <Header
@@ -227,7 +242,9 @@ export default function Landing() {
           placeholder="Search"
           variant="outlined"
           size="small"
-          onChange={(e)=>{debounceSearch(e,500)}}
+          onChange={(e) => {
+            debounceSearch(e);
+          }}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -247,8 +264,9 @@ export default function Landing() {
         placeholder="Search"
         variant="outlined"
         size="small"
-        onChange={handelSearch}
-        value={filterData.searchText}
+        onChange={(e) => {
+          debounceSearch(e);
+        }}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -266,37 +284,13 @@ export default function Landing() {
         handelGenre={handelGenre}
       />
       {isLoading ? (
-        <Grid className="circular-progress-parent">
-          <CircularProgress className="circular-progress" />
-          <Typography variant="h6" sx={{ color: "#F3F4F8" }}>
-            loading videos
-          </Typography>
-        </Grid>
+        <ShimmerUICards/>
       ) : (
         <Box>
           {noVideoFound ? (
-            <Box className="no-products">
-              <SentimentDissatisfied />
-              <div>
-                <Typography variant="h6" sx={{ color: "#F3F4F8" }}>
-                  No Videos Found
-                </Typography>
-              </div>
-            </Box>
+            NoVideoFoundComponent
           ) : (
-            <Grid
-              container
-              spacing={{ xs: 2, md: 3, lg: 3 }}
-              sx={{ backgroundColor: "#181818", padding: "0px 2rem" }}
-            >
-              {videosList.map((video) => {
-                return (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={video._id}>
-                    <VideoCard video={video} />
-                  </Grid>
-                );
-              })}
-            </Grid>
+            <VideoList list={videosList} />
           )}
         </Box>
       )}

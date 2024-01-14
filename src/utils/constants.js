@@ -12,3 +12,5 @@ export const MONTH_NAMES = [
     "Nov",
     "Dec",
   ];
+
+  export const videoListMock  = new Array(12).fill({})
