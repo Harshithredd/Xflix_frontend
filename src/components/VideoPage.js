@@ -10,6 +10,7 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import VideoCard, { getMonths } from "./VideoCard";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ShimmerUICards from "./ShimmerUICards/ShimmerUICards";
 
 export default function VideoPage(props) {
   const [video, setVideo] = useState({
@@ -186,12 +187,7 @@ export default function VideoPage(props) {
         <div className="horizontalLine"></div>
         <div>
           {isLoading ? (
-            <Grid className="circular-progress-parent">
-              <CircularProgress className="circular-progress" />
-              <Typography variant="h6" sx={{ color: "#F3F4F8" }}>
-                loading videos
-              </Typography>
-            </Grid>
+           <ShimmerUICards/>
           ) : (
             <Box>
               {noVideoFound ? (
